@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <ctime>
 
 int main() {
     std::string taskName;
@@ -15,7 +16,15 @@ int main() {
         // 检查用户是否想退出
         if (taskName == "exit") {
             std::cout << "Goodbye! Program closing..." << std::endl;
-            break; // 跳出循环，结束程序
+            break;
+        }
+
+        // 清空功能
+        if (taskName == "clear") {
+            std::ofstream ofs("tasks.txt", std::ios::trunc);
+            ofs.close();
+            std::cout << "SUCCESS: All tasks cleared!" << std::endl;
+            continue;
         }
 
         if (taskName.empty()) {
@@ -27,7 +36,14 @@ int main() {
         std::ofstream outFile("tasks.txt", std::ios::app); 
         
         if (outFile.is_open()) {
-            outFile << taskName << std::endl; // 把任务写入文件
+            // 获取当前时间并处理换行符
+            time_t now = time(0);
+            char* dt = ctime(&now);
+            std::string timeStr(dt);
+            if (!timeStr.empty()) timeStr.pop_back(); 
+
+            // 写入带时间戳的任务
+            outFile << "[" << timeStr << "] " << taskName << std::endl; // 把任务写入文件
             outFile.close(); // 写完记得关门
             std::cout << "SUCCESS: Task saved to disk!" << std::endl;
         } else {

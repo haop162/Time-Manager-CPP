@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Time Manager 看板</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; padding: 40px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { color: #1a73e8; border-bottom: 2px solid #1a73e8; padding-bottom: 10px; }
+        .task-card { background: #fff; border-left: 5px solid #34a853; margin: 10px 0; padding: 15px; border-radius: 4px; font-size: 16px; transition: 0.3s; }
+        .task-card:hover { transform: translateX(5px); box-shadow: 2px 2px 8px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🚀 组长的任务实时看板</h2>
+        <div id="list">正在同步后端数据...</div>
+    </div>
+
+    <script>
+        async function updateData() {
+            try {
+                // 读取根目录下的 tasks.txt
+                const res = await fetch('../tasks.txt');
+                const data = await res.text();
+                const listDiv = document.getElementById('list');
+                
+                if(!data.trim()) {
+                    listDiv.innerHTML = "<p style='color:gray'>目前还没有任务记录哦</p>";
+                    return;
+                }
+
+                // 将每一行转为卡片显示
+                listDiv.innerHTML = data.trim().split('\n').reverse().map(line => 
+                    `<div class="task-card">${line}</div>`
+                ).join('');
+            } catch (e) {
+                document.getElementById('list').innerHTML = "读取失败，请确认 Go Live 已开启";
+            }
+        }
+        updateData();
+        // 每 5 秒自动刷新一次，这样你改了 C++，他那边会自动跳出来
+        setInterval(updateData, 5000);
+    </script>
+</body>
+</html>

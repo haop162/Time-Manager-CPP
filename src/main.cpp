@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <fstream>
 
 int main() {
     std::string taskName;
@@ -20,6 +21,17 @@ int main() {
         if (taskName.empty()) {
             std::cout << "Warning: Task name cannot be empty!" << std::endl;
             continue;
+        }
+
+    // --- 功能二：写入文件 ---
+        std::ofstream outFile("tasks.txt", std::ios::app); 
+        
+        if (outFile.is_open()) {
+            outFile << taskName << std::endl; // 把任务写入文件
+            outFile.close(); // 写完记得关门
+            std::cout << "SUCCESS: Task saved to disk!" << std::endl;
+        } else {
+            std::cout << "Error: Could not open file for writing!" << std::endl;
         }
 
         std::cout << "SUCCESS: Task [" << taskName << "] has been added." << std::endl;

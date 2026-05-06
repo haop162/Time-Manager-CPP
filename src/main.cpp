@@ -5,6 +5,7 @@
 
 int main() {
     std::string taskName;
+    std::string priority; // 用于给前端提供分类
     std::cout << "--- Time Manager v1.1 ---" << std::endl;
     std::cout << "(Type 'exit' to quit the program)" << std::endl;
 
@@ -32,6 +33,11 @@ int main() {
             continue;
         }
 
+        // --- 组长小优化：增加一个简单的优先级输入 ---
+        std::cout << "Enter priority (Normal/Urgent): ";
+        std::getline(std::cin, priority);
+        if(priority.empty()) priority = "Normal";
+
     // --- 功能二：写入文件 ---
         std::ofstream outFile("tasks.txt", std::ios::app); 
         
@@ -40,11 +46,11 @@ int main() {
             time_t now = time(0);
             char* dt = ctime(&now);
             std::string timeStr(dt);
-            if (!timeStr.empty()) timeStr.pop_back(); 
+            if (!timeStr.empty()) timeStr.erase(timeStr.length() - 1);
 
             // 写入带时间戳的任务
-            outFile << "[" << timeStr << "] " << taskName << std::endl; // 把任务写入文件
-            outFile.close(); // 写完记得关门
+            outFile << timeStr << " | " << priority << " | " << taskName << std::endl; // 把任务写入文件
+            outFile.close(); 
             std::cout << "SUCCESS: Task saved to disk!" << std::endl;
         } else {
             std::cout << "Error: Could not open file for writing!" << std::endl;

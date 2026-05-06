@@ -44,12 +44,18 @@ int main() {
         if (outFile.is_open()) {
             // 获取当前时间并处理换行符
             time_t now = time(0);
+            
+            // --- 核心改动：生成一个任务 ID 
+            long long taskId = (long long)now; 
+
             char* dt = ctime(&now);
             std::string timeStr(dt);
             if (!timeStr.empty()) timeStr.erase(timeStr.length() - 1);
 
-            // 写入带时间戳的任务
-            outFile << timeStr << " | " << priority << " | " << taskName << std::endl; // 把任务写入文件
+            // 写入带 ID 和时间戳的任务
+            // 新格式：ID | 时间 | 优先级 | 内容
+            outFile << taskId << " | " << timeStr << " | " << priority << " | " << taskName << std::endl; 
+            
             outFile.close(); 
             std::cout << "SUCCESS: Task saved to disk!" << std::endl;
         } else {

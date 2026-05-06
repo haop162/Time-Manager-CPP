@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生事务时间管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+        }
+
+        /* 顶部导航栏 */
+        .nav-bar {
+            width: 100%;
+            height: 70px;
+            background-color: #165DFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 60px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 999;
+        }
+        .nav-bar .logo {
+            font-size: 22px;
+            color: #fff;
+            font-weight: bold;
+        }
+        .nav-menu a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            margin: 0 12px;
+            padding: 8px 10px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .nav-menu a.active {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* 主内容避开固定导航 */
+        .wrap {
+            margin-top: 70px;
+        }
+
+        /* 首页大横幅 - 这里是修改重点 */
+        .banner {
+    width: 100%;
+    height: 420px;
+    background: url('images/clock.png') center center / cover no-repeat;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    text-align: center;
+}
+        .banner h1 {
+            font-size: 46px;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+        .banner p {
+            font-size: 18px;
+            opacity: 0.9;
+            max-width: 600px;
+            line-height: 1.8;
+        }
+
+        /* 下面的样式不变 */
+        .container {
+            width: 1200px;
+            margin: 70px auto;
+        }
+        .title-line {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .title-line h2 {
+            font-size: 30px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .title-line p {
+            color: #888;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+        .card {
+            background: #fff;
+            padding: 35px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+            text-align: center;
+            transition: 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(22,93,255,0.15);
+        }
+        .card h3 {
+            font-size: 20px;
+            color: #165DFF;
+            margin: 15px 0;
+        }
+        .card p {
+            color: #666;
+            line-height: 1.7;
+        }
+
+        .intro-bottom {
+            background: #fff;
+            padding: 60px 0;
+            margin-top: 40px;
+            text-align: center;
+        }
+        .intro-bottom h3 {
+            font-size: 26px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .intro-bottom p {
+            width: 800px;
+            margin: 0 auto;
+            color: #666;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 顶部导航任务栏 -->
+<div class="nav-bar">
+    <div class="logo">学生事务时间管理系统</div>
+    <div class="nav-menu">
+        <a href="index.html" class="active">首页</a>
+        <a href="#">事务日程管理</a>
+        <a href="#">学习规划安排</a>
+        <a href="#">公告资讯中心</a>
+        <a href="#">使用帮助</a>
+        <a href="login.html">登录</a>
+        <a href="register.html">注册</a>
+    </div>
+</div>
+
+<div class="wrap">
+    <!-- 首页大横幅 -->
+    <div class="banner">
+        <h1>学生事务时间管理平台</h1>
+        <p>专为在校学生打造的个人事务、日程规划、优先级管理系统
+           <br>合理安排学习与生活，告别拖延，高效管理每一天
+        </p>
+    </div>
+
+    <!-- 核心功能介绍 -->
+    <div class="container">
+        <div class="title-line">
+            <h2>平台核心功能</h2>
+            <p>全方位满足学生日常事务与时间规划需求</p>
+        </div>
+
+        <div class="row">
+            <div class="card">
+                <h3>个人事务记录</h3>
+                <p>随时添加学习任务、校园事务、生活待办，清晰记录每一件需要完成的事项</p>
+            </div>
+            <div class="card">
+                <h3>优先级分级管理</h3>
+                <p>支持高、中、低三级优先级设置，自动排序，重要事务优先处理</p>
+            </div>
+            <div class="card">
+                <h3>时间日程安排</h3>
+                <p>自定义事务截止时间与计划时间，科学规划作息与学习进度</p>
+            </div>
+            <div class="card">
+                <h3>专属账号体系</h3>
+                <p>独立登录注册账号，每个人拥有专属事务数据，保护个人规划隐私</p>
+            </div>
+            <div class="card">
+                <h3>公告资讯浏览</h3>
+                <p>集中查看校园通知、课程安排、活动公告，不错过任何重要信息</p>
+            </div>
+            <div class="card">
+                <h3>简洁易用界面</h3>
+                <p>界面简约大气，操作简单直观，无需学习即可快速上手使用</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 系统简介 -->
+    <div class="intro-bottom">
+        <h3>系统简介</h3>
+        <p>
+            学生事务时间管理系统，面向全体在校学生设计，集事务记录、时间规划、优先级排序、公告查看于一体。
+            帮助学生合理分配学习、生活与课余时间，清晰管理待办事项，培养良好的时间管理习惯。
+            系统界面美观大方，功能完善，操作便捷，是学生日常规划的得力助手。
+        </p>
+    </div>
+</div>
+
+</body>
+</html>

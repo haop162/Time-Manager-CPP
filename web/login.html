@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 学生事务时间管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+
+        /* 全屏背景图 */
+        body {
+            background: url('images/login.jpeg') center center / cover no-repeat;
+            background-attachment: fixed;
+        }
+
+        /* 导航栏不变 */
+        .nav-bar {
+            width: 100%;
+            height: 70px;
+            background-color: #165DFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 60px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 999;
+        }
+        .nav-bar .logo {
+            font-size: 22px;
+            color: #fff;
+            font-weight: bold;
+        }
+        .nav-menu a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            margin: 0 12px;
+            padding: 8px 10px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .nav-menu a.active {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* 登录框垂直居中 */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding-top: 70px;
+        }
+
+        .login-box {
+            width: 460px;
+            background: #fff;
+            padding: 50px 40px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        .login-box h2 {
+            text-align: center;
+            color: #165DFF;
+            margin-bottom: 35px;
+            font-size: 24px;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 15px;
+            outline-color: #165DFF;
+        }
+        .login-box button {
+            width: 100%;
+            padding: 15px;
+            background: #165DFF;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .login-box button:hover {
+            background: #0b4cde;
+        }
+        .tip {
+            text-align: center;
+            margin-top: 25px;
+            color: #666;
+        }
+        .tip a {
+            color: #165DFF;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="nav-bar">
+    <div class="logo">学生事务时间管理系统</div>
+    <div class="nav-menu">
+        <a href="index.html">首页</a>
+        <a href="#">事务日程管理</a>
+        <a href="#">学习规划安排</a>
+        <a href="notice.html">公告资讯中心</a>
+        <a href="#">使用帮助</a>
+        <a href="login.html" class="active">登录</a>
+        <a href="register.html">注册</a>
+    </div>
+</div>
+
+<div class="login-container">
+    <div class="login-box">
+        <h2>账号登录</h2>
+        <input type="text" placeholder="请输入学号/账号">
+        <input type="password" placeholder="请输入密码">
+        <button onclick="alert('登录成功！'); location.href='task.html'">立即登录</button>
+        <div class="tip">还没有账号？<a href="register.html">立即注册</a></div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -15,7 +15,6 @@
             background-color: #f5f7fa;
         }
 
-        /* 顶部导航栏 */
         .nav-bar {
             width: 100%;
             height: 70px;
@@ -51,12 +50,10 @@
             background: rgba(255,255,255,0.25);
         }
 
-        /* 主内容避开固定导航 */
         .wrap {
             margin-top: 70px;
         }
 
-        /* 首页大横幅 - 这里是修改重点 */
         .banner {
     width: 100%;
     height: 420px;
@@ -80,7 +77,6 @@
             line-height: 1.8;
         }
 
-        /* 下面的样式不变 */
         .container {
             width: 1200px;
             margin: 70px auto;
@@ -147,22 +143,21 @@
 </head>
 <body>
 
-<!-- 顶部导航任务栏 -->
+<!-- 已修好的导航栏！全部能点！-->
 <div class="nav-bar">
     <div class="logo">学生事务时间管理系统</div>
     <div class="nav-menu">
-        <a href="index.html" class="active">首页</a>
-        <a href="#">事务日程管理</a>
-        <a href="#">学习规划安排</a>
-        <a href="#">公告资讯中心</a>
+        <a href="new.html" class="active">首页</a>
+        <a href="task.html">事务日程管理</a>
+        <a href="study.html">学习规划安排</a>
         <a href="#">使用帮助</a>
         <a href="login.html">登录</a>
         <a href="register.html">注册</a>
+        <a href="javascript:logout()" style="color:#ff4444; font-weight:bold;">退出登录</a>
     </div>
 </div>
 
 <div class="wrap">
-    <!-- 首页大横幅 -->
     <div class="banner">
         <h1>学生事务时间管理平台</h1>
         <p>专为在校学生打造的个人事务、日程规划、优先级管理系统
@@ -170,7 +165,6 @@
         </p>
     </div>
 
-    <!-- 核心功能介绍 -->
     <div class="container">
         <div class="title-line">
             <h2>平台核心功能</h2>
@@ -205,7 +199,6 @@
         </div>
     </div>
 
-    <!-- 系统简介 -->
     <div class="intro-bottom">
         <h3>系统简介</h3>
         <p>
@@ -215,6 +208,37 @@
         </p>
     </div>
 </div>
+<script>
+// 判断是否临时登录
+function checkLogin(){
+    return sessionStorage.getItem("isLogin") === "true";
+}
 
+document.querySelectorAll('.nav-menu a').forEach(a => {
+    a.addEventListener('click', function(e) {
+        const href = this.getAttribute('href');
+        const allow = ['new.html', 'login.html', 'register.html'];
+        if (allow.includes(href)) return;
+
+        // 没登录就拦截
+        if (!checkLogin()) {
+            e.preventDefault();
+            let go = confirm('请先登录后使用功能！\n确定去登录？取消留在当前页');
+            if (go) location.href = 'login.html';
+        }
+    });
+});
+</script>
+<script>
+// 退出登录 —— 清理所有登录状态
+function logout() {
+    // 清空登录状态（你现在用的是 sessionStorage）
+    sessionStorage.removeItem("isLogin");
+    
+    // 跳回登录页
+    alert("已退出登录，请重新登录！");
+    location.href = "login.html";
+}
+</script>
 </body>
 </html>

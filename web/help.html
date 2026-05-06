@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script>
+// 只判断会话登录，刷新就失效
+if (sessionStorage.getItem("isLogin") !== "true") {
+    alert("请先登录后再访问该页面！");
+    location.href = "new.html";
+}
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>使用帮助 - 学生事务时间管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+        }
+        .nav-bar {
+            width: 100%;
+            height: 70px;
+            background-color: #165DFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 60px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 999;
+        }
+        .nav-bar .logo {
+            font-size: 22px;
+            color: #fff;
+            font-weight: bold;
+        }
+        .nav-menu a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            margin: 0 12px;
+            padding: 8px 10px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .nav-menu a.active {
+            background: rgba(255,255,255,0.25);
+        }
+        .wrap {
+            margin-top: 120px;
+            width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 60px;
+        }
+        .page-title {
+            font-size: 26px;
+            color: #333;
+            margin-bottom: 30px;
+            padding-left: 10px;
+            border-left: 5px solid #165DFF;
+        }
+        .help-card {
+            background: #fff;
+            padding: 25px 30px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .help-card h3 {
+            color: #165DFF;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+        .help-card p {
+            color: #666;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="nav-bar">
+    <div class="logo">学生事务时间管理系统</div>
+    <div class="nav-menu">
+        <a href="new.html">首页</a>
+        <a href="task.html">事务日程管理</a>
+        <a href="study.html">学习规划安排</a>
+        <a href="help.html" class="active">使用帮助</a>
+        <a href="login.html">登录</a>
+        <a href="register.html">注册</a>
+        <a href="javascript:logout()" style="color:#ff4444; font-weight:bold;">退出登录</a>
+    </div>
+</div>
+
+<div class="wrap">
+    <h2 class="page-title">系统使用帮助</h2>
+
+    <div class="help-card">
+        <h3>1. 账号注册与登录</h3>
+        <p>进入系统后可点击右上角注册，填写个人信息完成账号注册；已有账号直接登录即可进入系统全部功能页面。</p>
+    </div>
+
+    <div class="help-card">
+        <h3>2. 事务日程管理使用</h3>
+        <p>可添加待办事务，设置事务时间和高、中、低优先级；不同优先级会自动区分颜色，方便优先处理紧急事务。</p>
+    </div>
+
+    <div class="help-card">
+        <h3>3. 学习规划安排操作</h3>
+        <p>双击文字可直接修改学习计划内容；可点击添加新计划、删除不需要的计划，自由定制个人每周学习安排。</p>
+    </div>
+
+    <div class="help-card">
+        <h3>4. 常见问题</h3>
+        <p>若页面跳转异常，请检查网络；功能页面均可通过顶部导航栏自由切换，操作简单易懂。</p>
+    </div>
+</div>
+<script>
+// 退出登录 —— 清理所有登录状态
+function logout() {
+    // 清空登录状态（你现在用的是 sessionStorage）
+    sessionStorage.removeItem("isLogin");
+    
+    // 跳回登录页
+    alert("已退出登录，请重新登录！");
+    location.href = "login.html";
+}
+</script>
+</body>
+</html>

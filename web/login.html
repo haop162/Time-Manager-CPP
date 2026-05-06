@@ -110,6 +110,12 @@
             text-decoration: none;
             font-weight: bold;
         }
+        .remember {
+            margin: 5px 0 10px;
+            font-size: 14px;
+            color: #666;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
@@ -117,11 +123,11 @@
 <div class="nav-bar">
     <div class="logo">学生事务时间管理系统</div>
     <div class="nav-menu">
-        <a href="index.html">首页</a>
-        <a href="#">事务日程管理</a>
-        <a href="#">学习规划安排</a>
+        <a href="new.html">首页</a>
+        <a href="task.html">事务日程管理</a>
+        <a href="study.html">学习规划安排</a>
         <a href="notice.html">公告资讯中心</a>
-        <a href="#">使用帮助</a>
+        <a href="help.html">使用帮助</a>
         <a href="login.html" class="active">登录</a>
         <a href="register.html">注册</a>
     </div>
@@ -130,12 +136,58 @@
 <div class="login-container">
     <div class="login-box">
         <h2>账号登录</h2>
-        <input type="text" placeholder="请输入学号/账号">
-        <input type="password" placeholder="请输入密码">
-        <button onclick="alert('登录成功！'); location.href='task.html'">立即登录</button>
+        <input type="text" id="username" placeholder="请输入学号/账号">
+        <input type="password" id="pwd" placeholder="请输入密码">
+        
+        <div class="remember">
+            <label>
+                <input type="checkbox" id="rememberMe"> 记住账号密码
+            </label>
+        </div>
+
+        <button onclick="login()">立即登录</button>
         <div class="tip">还没有账号？<a href="register.html">立即注册</a></div>
     </div>
 </div>
 
+<script>
+// 页面加载：如果有保存的账号密码，自动回填
+window.onload = function(){
+    let savedUser = localStorage.getItem("saveUser");
+    let savedPwd = localStorage.getItem("savePwd");
+    if(savedUser && savedPwd){
+        document.getElementById("username").value = savedUser;
+        document.getElementById("pwd").value = savedPwd;
+        document.getElementById("rememberMe").checked = true;
+    }
+};
+
+function login() {
+    let username = document.getElementById('username').value;
+    let pwd = document.getElementById('pwd').value;
+    let remember = document.getElementById('rememberMe').checked;
+
+    if (!username || !pwd) {
+        alert('请输入账号和密码！');
+        return;
+    }
+
+    // 记住账号密码：存在localStorage，永久保存
+    if(remember){
+        localStorage.setItem("saveUser", username);
+        localStorage.setItem("savePwd", pwd);
+    }else{
+        // 不记住则清空保存
+        localStorage.removeItem("saveUser");
+        localStorage.removeItem("savePwd");
+    }
+
+    // 登录权限 只放 sessionStorage → 刷新/关浏览器 自动失效
+    sessionStorage.setItem("isLogin", "true");
+
+    alert('登录成功！欢迎你：' + username);
+    location.href = 'task.html';
+}
+</script>
 </body>
 </html>

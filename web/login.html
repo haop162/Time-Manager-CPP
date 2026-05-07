@@ -162,7 +162,7 @@ window.onload = function(){
     }
 };
 
-function login() {
+async function login() {
     let username = document.getElementById('username').value;
     let pwd = document.getElementById('pwd').value;
     let remember = document.getElementById('rememberMe').checked;
@@ -183,10 +183,28 @@ function login() {
     }
 
     // 登录权限 只放 sessionStorage → 刷新/关浏览器 自动失效
-    sessionStorage.setItem("isLogin", "true");
+    // --- 替换开始：发起真实后端请求 ---
+    try {
+        const response = await fetch('http://localhost:8080/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username, password: pwd })
+        });
 
-    alert('登录成功！欢迎你：' + username);
-    location.href = 'task.html';
+        const result = await response.json();
+
+        if (result.status === "success") {
+            // 只有后端验证通过，才发放“通行证”
+            sessionStorage.setItem("isLogin", "true");
+            alert('登录成功！欢迎你：' + username);
+            location.href = 'task.html';
+        } else {
+            alert('登录失败：' + result.message);
+        }
+    } catch (error) {
+        alert('无法连接到后端服务器，请确保 C++ 程序已启动！');
+    }
+    // --- 替换结束 ---
 }
 </script>
 </body>

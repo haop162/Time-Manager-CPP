@@ -3,7 +3,64 @@
 #include <fstream>
 #include <ctime>
 
+// --- 核心工具：检查账号密码是否匹配，或者账号是否存在 ---
+bool checkUser(std::string username, std::string password = "", int mode = 0) {
+    std::ifstream inFile("users.txt");
+    if (!inFile) return false; 
+
+    std::string line;
+    while (std::getline(inFile, line)) {
+        size_t pos = line.find(" | ");
+        if (pos != std::string::npos) {
+            std::string u = line.substr(0, pos);
+            std::string p = line.substr(pos + 3);
+            if (mode == 0 && u == username) return true; // 账号已存在
+            if (mode == 1 && u == username && p == password) return true; // 登录成功
+        }
+    }
+    return false;
+}
+
 int main() {
+
+    std::string user, pwd;
+    bool loggedIn = false;
+
+    std::cout << "--- Welcome to Student Time Manager ---" << std::endl;
+    
+    while (!loggedIn) {
+        std::cout << "\n1. Login  2. Register  3. Exit\nChoose: ";
+        int choice;
+        std::cin >> choice;
+        std::cin.ignore(); // 清除回车
+
+        if (choice == 3) return 0;
+
+        std::cout << "Username: "; std::getline(std::cin, user);
+        std::cout << "Password: "; std::getline(std::cin, pwd);
+
+        if (choice == 1) { // 登录
+            if (checkUser(user, pwd, 1)) {
+                std::cout << "SUCCESS: Welcome, " << user << "!" << std::endl;
+                loggedIn = true;
+            } else {
+                std::cout << "ERROR: Invalid username or password!" << std::endl;
+            }
+        } else if (choice == 2) { // 注册
+            if (checkUser(user)) {
+                std::cout << "ERROR: Username already exists!" << std::endl;
+            } else {
+                std::ofstream out("users.txt", std::ios::app);
+                out << user << " | " << pwd << std::endl;
+                out.close();
+                std::cout << "SUCCESS: Registered! Please login." << std::endl;
+            }
+        }
+    }
+
+    // --- 登录成功后，才进入你原来的任务管理循环 ---
+
+
     std::string taskName;
     std::string priority; // 用于给前端提供分类
     std::cout << "--- Time Manager v1.1 ---" << std::endl;

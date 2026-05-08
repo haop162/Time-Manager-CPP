@@ -114,7 +114,6 @@
 </head>
 <body>
 
-<!-- 已全部修好！所有导航都能正常跳转！-->
 <div class="nav-bar">
     <div class="logo">学生事务时间管理系统</div>
     <div class="nav-menu">
@@ -130,14 +129,61 @@
 <div class="reg-container">
     <div class="reg-box">
         <h2>账号注册</h2>
-        <input type="text" placeholder="请输入学号">
-        <input type="text" placeholder="请输入姓名">
-        <input type="password" placeholder="设置登录密码">
-        <input type="password" placeholder="确认密码">
-        <button onclick="alert('注册成功！'); location.href='login.html'">立即注册</button>
+        <input type="text" id="reg_username" placeholder="请输入学号">
+        <input type="text" id="reg_realname" placeholder="请输入姓名">
+        <input type="password" id="reg_password" placeholder="设置登录密码">
+        <input type="password" id="reg_confirm" placeholder="确认密码">
+        
+        <button onclick="handleRegister()">立即注册</button>
+        
         <div class="tip">已有账号？<a href="login.html">去登录</a></div>
     </div>
 </div>
+
+<script>
+async function handleRegister() {
+    const username = document.getElementById('reg_username').value;
+    const realname = document.getElementById('reg_realname').value;
+    const password = document.getElementById('reg_password').value;
+    const confirm = document.getElementById('reg_confirm').value;
+
+    // 1. 简单校验
+    if (!username || !realname || !password) {
+        alert("请填完所有信息！");
+        return;
+    }
+    if (password !== confirm) {
+        alert("两次输入的密码不一致！");
+        return;
+    }
+
+    try {
+        // 2. 真正发给 C++ 后端
+        const response = await fetch('http://localhost:8080/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                username: username, 
+                password: password, 
+                realname: realname 
+            })
+        });
+
+        const data = await response.json();
+
+        // 3. 根据后端返回的 status 判断
+        if (data.status === 'success') {
+            alert('注册成功！');
+            location.href = 'login.html';
+        } else {
+            // 如果后端返回 fail，说明学号重复了
+            alert('注册失败：该学号已存在！');
+        }
+    } catch (error) {
+        alert('无法连接后端，请确保 C++ 服务器已启动！');
+    }
+}
+</script>
 
 </body>
 </html>

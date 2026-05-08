@@ -1,126 +1,87 @@
+#include "httplib.h"
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <ctime>
+#include <regex>
 
-// --- 核心工具：检查账号密码是否匹配，或者账号是否存在 ---
-bool checkUser(std::string username, std::string password = "", int mode = 0) {
+// 辅助函数：去掉字符串前后的空格
+std::string trim(const std::string& s) {
+    size_t first = s.find_first_not_of(" \r\n\t");
+    if (first == std::string::npos) return "";
+    size_t last = s.find_last_not_of(" \r\n\t");
+    return s.substr(first, (last - first + 1));
+}
+
+std::string handleUser(std::string targetId, std::string targetPwd = "", int mode = 0) {
     std::ifstream inFile("users.txt");
-    if (!inFile) return false; 
-
+    if (!inFile) return "";
     std::string line;
+    targetId = trim(targetId);
+    targetPwd = trim(targetPwd);
+
     while (std::getline(inFile, line)) {
-        size_t pos = line.find(" | ");
-        if (pos != std::string::npos) {
-            std::string u = line.substr(0, pos);
-            std::string p = line.substr(pos + 3);
-            if (mode == 0 && u == username) return true; // 账号已存在
-            if (mode == 1 && u == username && p == password) return true; // 登录成功
+        // 兼容性查重：只要包含这个学号且它是独立的列
+        size_t pos1 = line.find(" | ");
+        size_t pos2 = line.rfind(" | ");
+        if (pos1 != std::string::npos && pos2 != std::string::npos && pos1 != pos2) {
+            std::string u = trim(line.substr(0, pos1));
+            std::string p = trim(line.substr(pos1 + 3, pos2 - (pos1 + 3)));
+            std::string name = trim(line.substr(pos2 + 3));
+
+            if (mode == 0 && u == targetId) return "exists";
+            if (mode == 1 && u == targetId && p == targetPwd) return name;
         }
     }
-    return false;
+    return "";
 }
 
 int main() {
+    httplib::Server svr;
+    auto cors = [](const auto&, auto& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+        res.set_header("Access-Control-Allow-Headers", "Content-Type");
+    };
+    svr.Options(R"(.*)", cors);
 
-    std::string user, pwd;
-    bool loggedIn = false;
+    svr.Post("/register", [&](const httplib::Request& req, httplib::Response& res) {
+        cors(req, res);
+        // 分别搜索，全部用 m[1] 保证准确
+        std::regex uReg("\"username\":\"(.*?)\""), pReg("\"password\":\"(.*?)\""), nReg("\"realname\":\"(.*?)\"");
+        std::smatch m;
+        std::string u, p, n;
+        if (std::regex_search(req.body, m, uReg)) u = m[1];
+        if (std::regex_search(req.body, m, pReg)) p = m[1];
+        if (std::regex_search(req.body, m, nReg)) n = m[1];
 
-    std::cout << "--- Welcome to Student Time Manager ---" << std::endl;
-    
-    while (!loggedIn) {
-        std::cout << "\n1. Login  2. Register  3. Exit\nChoose: ";
-        int choice;
-        std::cin >> choice;
-        std::cin.ignore(); // 清除回车
-
-        if (choice == 3) return 0;
-
-        std::cout << "Username: "; std::getline(std::cin, user);
-        std::cout << "Password: "; std::getline(std::cin, pwd);
-
-        if (choice == 1) { // 登录
-            if (checkUser(user, pwd, 1)) {
-                std::cout << "SUCCESS: Welcome, " << user << "!" << std::endl;
-                loggedIn = true;
-            } else {
-                std::cout << "ERROR: Invalid username or password!" << std::endl;
-            }
-        } else if (choice == 2) { // 注册
-            if (checkUser(user)) {
-                std::cout << "ERROR: Username already exists!" << std::endl;
-            } else {
-                std::ofstream out("users.txt", std::ios::app);
-                out << user << " | " << pwd << std::endl;
-                out.close();
-                std::cout << "SUCCESS: Registered! Please login." << std::endl;
-            }
-        }
-    }
-
-    // --- 登录成功后，才进入你原来的任务管理循环 ---
-
-
-    std::string taskName;
-    std::string priority; // 用于给前端提供分类
-    std::cout << "--- Time Manager v1.1 ---" << std::endl;
-    std::cout << "(Type 'exit' to quit the program)" << std::endl;
-
-    // 功能一：使用 while 循环让程序持续运行
-    while (true) {
-        std::cout << "\nPlease enter a new task name: ";
-        std::getline(std::cin, taskName);
-
-        // 检查用户是否想退出
-        if (taskName == "exit") {
-            std::cout << "Goodbye! Program closing..." << std::endl;
-            break;
-        }
-
-        // 清空功能
-        if (taskName == "clear") {
-            std::ofstream ofs("tasks.txt", std::ios::trunc);
-            ofs.close();
-            std::cout << "SUCCESS: All tasks cleared!" << std::endl;
-            continue;
-        }
-
-        if (taskName.empty()) {
-            std::cout << "Warning: Task name cannot be empty!" << std::endl;
-            continue;
-        }
-
-        // --- 组长小优化：增加一个简单的优先级输入 ---
-        std::cout << "Enter priority (Normal/Urgent): ";
-        std::getline(std::cin, priority);
-        if(priority.empty()) priority = "Normal";
-
-    // --- 功能二：写入文件 ---
-        std::ofstream outFile("tasks.txt", std::ios::app); 
-        
-        if (outFile.is_open()) {
-            // 获取当前时间并处理换行符
-            time_t now = time(0);
-            
-            // --- 核心改动：生成一个任务 ID 
-            long long taskId = (long long)now; 
-
-            char* dt = ctime(&now);
-            std::string timeStr(dt);
-            if (!timeStr.empty()) timeStr.erase(timeStr.length() - 1);
-
-            // 写入带 ID 和时间戳的任务
-            // 新格式：ID | 时间 | 优先级 | 内容
-            outFile << taskId << " | " << timeStr << " | " << priority << " | " << taskName << std::endl; 
-            
-            outFile.close(); 
-            std::cout << "SUCCESS: Task saved to disk!" << std::endl;
+        if (handleUser(u) == "exists") {
+            std::cout << ">>> 拦截到重复学号: " << u << std::endl;
+            res.set_content("{\"status\":\"fail\",\"msg\":\"学号已存在\"}", "application/json");
         } else {
-            std::cout << "Error: Could not open file for writing!" << std::endl;
+            std::ofstream out("users.txt", std::ios::app);
+            out << u << " | " << p << " | " << n << std::endl;
+            out.close();
+            res.set_content("{\"status\":\"success\"}", "application/json");
         }
+    });
 
-        std::cout << "SUCCESS: Task [" << taskName << "] has been added." << std::endl;
-    }
+    svr.Post("/login", [&](const httplib::Request& req, httplib::Response& res) {
+        cors(req, res);
+        std::regex uReg("\"username\":\"(.*?)\""), pReg("\"password\":\"(.*?)\"");
+        std::smatch m;
+        std::string u, p;
+        if (std::regex_search(req.body, m, uReg)) u = m[1];
+        if (std::regex_search(req.body, m, pReg)) p = m[1];
 
+        std::string realName = handleUser(u, p, 1);
+        if (!realName.empty()) {
+            res.set_content("{\"status\":\"success\",\"name\":\"" + realName + "\"}", "application/json");
+        } else {
+            res.set_content("{\"status\":\"fail\"}", "application/json");
+        }
+    });
+
+    std::cout << ">>> Server Solidified! Port 8080" << std::endl;
+    svr.listen("0.0.0.0", 8080);
     return 0;
 }

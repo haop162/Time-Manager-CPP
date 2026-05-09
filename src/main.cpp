@@ -81,6 +81,73 @@ int main() {
         }
     });
 
+ // 1. 添加任务接口 - 加固版
+svr.Post("/add_task", [&](const httplib::Request& req, httplib::Response& res) {
+    cors(req, res);
+    std::cout << ">>> 正在处理添加请求: " << req.body << std::endl;
+
+    // 分别提取，全部用 m[1]
+    std::regex uReg("\"username\":\"(.*?)\""), tReg("\"task_name\":\"(.*?)\""), 
+               dReg("\"task_time\":\"(.*?)\""), pReg("\"priority\":\"(.*?)\"");
+    std::smatch m;
+    std::string u, task, time, prio;
+    
+    if (std::regex_search(req.body, m, uReg)) u = m[1];
+    if (std::regex_search(req.body, m, tReg)) task = m[1];
+    if (std::regex_search(req.body, m, dReg)) time = m[1];
+    if (std::regex_search(req.body, m, pReg)) prio = m[1];
+
+    if (u.empty() || task.empty()) {
+        std::cout << "!!! 错误：解析到的学号或任务名为空" << std::endl;
+        res.set_content("{\"status\":\"fail\"}", "application/json");
+        return;
+    }
+
+    std::ofstream out("tasks.txt", std::ios::app);
+    if (out.is_open()) {
+        // 强制格式：学号 | 任务名 | 时间 | 优先级
+        out << trim(u) << " | " << trim(task) << " | " << trim(time) << " | " << trim(prio) << std::endl;
+        out.close();
+        std::cout << ">>> 成功写入 tasks.txt" << std::endl;
+        res.set_content("{\"status\":\"success\"}", "application/json");
+    } else {
+        std::cout << "!!! 错误：无法打开 tasks.txt 文件" << std::endl;
+        res.set_content("{\"status\":\"fail\"}", "application/json");
+    }
+});
+
+// 2. 获取任务接口 - 稳定版
+svr.Get("/get_tasks", [&](const httplib::Request& req, httplib::Response& res) {
+    cors(req, res);
+    std::string targetUser = trim(req.get_param_value("username"));
+    std::string jsonResult = "[";
+    
+    std::ifstream inFile("tasks.txt");
+    std::string line;
+    bool first = true;
+    while (std::getline(inFile, line)) {
+        if (trim(line).empty()) continue;
+        
+        // 使用更稳健的切割方式
+        size_t p1 = line.find(" | ");
+        size_t p2 = line.find(" | ", p1 + 3);
+        size_t p3 = line.find(" | ", p2 + 3);
+
+        if (p1 != std::string::npos && p2 != std::string::npos && p3 != std::string::npos) {
+            std::string u = trim(line.substr(0, p1));
+            if (u == targetUser) {
+                if (!first) jsonResult += ",";
+                jsonResult += "{\"task_name\":\"" + trim(line.substr(p1 + 3, p2 - p1 - 3)) + 
+                              "\",\"task_time\":\"" + trim(line.substr(p2 + 3, p3 - p2 - 3)) + 
+                              "\",\"priority\":\"" + trim(line.substr(p3 + 3)) + "\"}";
+                first = false;
+            }
+        }
+    }
+    jsonResult += "]";
+    res.set_content(jsonResult, "application/json");
+});
+
     std::cout << ">>> Server Solidified! Port 8080" << std::endl;
     svr.listen("0.0.0.0", 8080);
     return 0;

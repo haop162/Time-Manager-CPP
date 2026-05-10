@@ -1,136 +1,39 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-   <script>
-// 只判断会话登录，刷新就失效
-if (sessionStorage.getItem("isLogin") !== "true") {
-    alert("请先登录后再访问该页面！");
-    location.href = "new.html";
-}
-</script>
+    <script>
+    if (sessionStorage.getItem("isLogin") !== "true") {
+        alert("请先登录后再访问该页面！");
+        location.href = "new.html";
+    }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>学习规划安排 - 学生事务时间管理系统</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Microsoft Yahei", sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft Yahei", sans-serif; }
+        body { background: url('images/study.jpeg') center top / cover no-repeat fixed; background-color: #f5f7fa; }
+        .nav-bar { width: 100%; height: 70px; background-color: #165DFF; display: flex; align-items: center; justify-content: space-between; padding: 0 60px; box-shadow: 0 2px 12px rgba(0,0,0,0.12); position: fixed; top: 0; left: 0; z-index: 999; }
+        .nav-bar .logo { font-size: 22px; color: #fff; font-weight: bold; }
+        .nav-menu a { color: #fff; text-decoration: none; font-size: 16px; margin: 0 12px; padding: 8px 10px; border-radius: 5px; }
+        .wrap { margin-top: 120px; width: 1000px; margin-left: auto; margin-right: auto; background: rgba(255, 255, 255, 0.85); padding: 30px; border-radius: 12px; min-height: 80vh; }
+        .page-title { font-size: 26px; color: #333; margin-bottom: 30px; padding-left: 10px; border-left: 5px solid #165DFF; }
+        .add-btn { background: #165DFF; color: #fff; border: none; padding: 12px 25px; border-radius: 8px; font-size: 15px; cursor: pointer; margin-bottom: 20px; }
+        .study-card { background: #fff; padding: 25px 30px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); position: relative; border: 1px solid transparent; transition: 0.3s; }
+        .study-card:hover { border-color: #165DFF; }
+        .study-card h3 { color: #165DFF; margin-bottom: 10px; font-size: 18px; outline: none; min-height: 1.2em; }
+        .study-card p { color: #666; line-height: 1.7; outline: none; min-height: 3em; white-space: pre-wrap; }
+        .study-card .time { color: #999; font-size: 13px; margin-top: 10px; outline: none; min-height: 1.2em; }
+        .delete-btn { position: absolute; top: 15px; right: 15px; background: #f53f3f; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; opacity: 0.6; }
+        .delete-btn:hover { opacity: 1; }
 
-        /* ✅ 加上全屏柔和背景图 */
-        body {
-            background: url('images/study.jpeg') center top / cover no-repeat fixed;
-            background-color: #f5f7fa;
-        }
-
-        .nav-bar {
-            width: 100%;
-            height: 70px;
-            background-color: #165DFF;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 60px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 999;
-        }
-        .nav-bar .logo {
-            font-size: 22px;
-            color: #fff;
-            font-weight: bold;
-        }
-        .nav-menu a {
-            color: #fff;
-            text-decoration: none;
-            font-size: 16px;
-            margin: 0 12px;
-            padding: 8px 10px;
-            border-radius: 5px;
-            transition: all 0.3s;
-        }
-        .nav-menu a:hover {
-            background: rgba(255,255,255,0.2);
-        }
-        .nav-menu a.active {
-            background: rgba(255,255,255,0.25);
-        }
-
-        /* ✅ 半透明白底，让文字更清晰 */
-        .wrap {
-            margin-top: 120px;
-            width: 1000px;
-            margin-left: auto;
-            margin-right: auto;
-            background: rgba(255, 255, 255, 0.85);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        }
-
-        .page-title {
-            font-size: 26px;
-            color: #333;
-            margin-bottom: 30px;
-            padding-left: 10px;
-            border-left: 5px solid #165DFF;
-        }
-        .add-btn {
-            background: #165DFF;
-            color: #fff;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-size: 15px;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
-        .add-btn:hover {
-            background: #0b4cde;
-        }
-        .study-card {
-            background: #fff;
-            padding: 25px 30px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            position: relative;
-        }
-        .study-card h3 {
-            color: #165DFF;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-        .study-card p {
-            color: #666;
-            line-height: 1.7;
-        }
-        .study-card .time {
-            color: #999;
-            font-size: 13px;
-            margin-top: 10px;
-        }
-        .delete-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: #f53f3f;
-            color: #fff;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-        .edit-tip {
-            font-size: 12px;
-            color: #999;
-            margin-top: 5px;
-            margin-bottom: 20px;
+        /* ✅ 虚化占位符优化版 */
+        [contenteditable]:empty::before {
+            content: attr(placeholder);
+            color: #86909C;
+            font-style: italic;
+            pointer-events: none;
+            display: block; /* 解决部分浏览器标题标签不显示伪元素的问题 */
         }
     </style>
 </head>
@@ -141,71 +44,98 @@ if (sessionStorage.getItem("isLogin") !== "true") {
     <div class="nav-menu">
         <a href="new.html">首页</a>
         <a href="task.html">事务日程管理</a>
-        <a href="study.html" class="active">学习规划安排</a>
-        <a href="help.html">使用帮助</a>
+        <a href="study.html" style="background: rgba(255,255,255,0.25)">学习规划安排</a>
         <a href="login.html">登录</a>
-        <a href="register.html">注册</a>
-        <a href="javascript:logout()" style="color:#ff4444; font-weight:bold;">退出登录</a>
+        <a href="javascript:localStorage.clear();location.href='login.html'" style="color:red">退出登录</a>
     </div>
 </div>
 
 <div class="wrap">
     <h2 class="page-title">学习规划安排</h2>
     <button class="add-btn" onclick="addNewPlan()">+ 添加新计划</button>
-    <p class="edit-tip">💡 双击卡片文字即可编辑内容，点击右上角删除按钮可删除计划</p>
-
-    <div id="planList">
-        <div class="study-card">
-            <button class="delete-btn" onclick="deletePlan(this)">删除</button>
-            <h3 contenteditable="true">周一学习计划</h3>
-            <p contenteditable="true">08:00-10:00 前端网页开发学习<br>14:00-16:00 完成作业与练习<br>19:00-21:00 复习本周知识点</p>
-            <div class="time" contenteditable="true">每周一执行</div>
-        </div>
-
-        <div class="study-card">
-            <button class="delete-btn" onclick="deletePlan(this)">删除</button>
-            <h3 contenteditable="true">周三学习计划</h3>
-            <p contenteditable="true">09:00-11:00 项目开发与调试<br>15:00-17:00 查阅资料与优化代码<br>20:00-21:00 总结当日进度</p>
-            <div class="time" contenteditable="true">每周三执行</div>
-        </div>
-
-        <div class="study-card">
-            <button class="delete-btn" onclick="deletePlan(this)">删除</button>
-            <h3 contenteditable="true">周五学习计划</h3>
-            <p contenteditable="true">10:00-12:00 功能测试与完善<br>16:00-18:00 整理学习笔记<br>21:00-22:00 规划下周学习内容</p>
-            <div class="time" contenteditable="true">每周五执行</div>
-        </div>
-    </div>
+    <div id="planList"></div>
 </div>
 
 <script>
-    function addNewPlan() {
+    const username = localStorage.getItem("saveUser");
+
+    window.onload = async function() {
+        if (!username) return;
+        try {
+            const res = await fetch(`http://localhost:8080/get_plans?username=${username}`);
+            const plans = await res.json();
+            // 只有当有数据时才渲染
+            if (plans && plans.length > 0) {
+                plans.forEach(p => renderPlan(p.title, p.content, p.time));
+            }
+        } catch (e) { console.log("暂无保存的学习计划"); }
+    };
+
+    function renderPlan(title, content, time) {
         const planList = document.getElementById('planList');
         const newCard = document.createElement('div');
         newCard.className = 'study-card';
+        
+        // 使用 innerHTML 渲染，注意处理内容为空的情况以触发 CSS :empty
         newCard.innerHTML = `
             <button class="delete-btn" onclick="deletePlan(this)">删除</button>
-            <h3 contenteditable="true">新的学习计划</h3>
-            <p contenteditable="true">在这里输入你的计划内容，用换行来分段</p>
-            <div class="time" contenteditable="true">备注信息（如：每周固定）</div>
+            <h3 contenteditable="true" placeholder="在此输入计划标题..." onblur="saveAllPlans()">${title || ''}</h3>
+            <p contenteditable="true" placeholder="点击此处输入详细计划内容..." onblur="saveAllPlans()">${content || ''}</p>
+            <div class="time" contenteditable="true" placeholder="备注时间：如每周固定" onblur="saveAllPlans()">${time || ''}</div>
         `;
         planList.appendChild(newCard);
     }
-    function deletePlan(btn) {
-        const card = btn.parentElement;
-        card.remove();
+
+    function addNewPlan() {
+        renderPlan("", "", ""); // 传入空字符串，触发虚化提示
+        // 这里不需要立刻 save，等用户输入完失焦后再 save
     }
-</script>
-<script>
-// 退出登录 —— 清理所有登录状态
-function logout() {
-    // 清空登录状态（你现在用的是 sessionStorage）
-    sessionStorage.removeItem("isLogin");
-    
-    // 跳回登录页
-    alert("已退出登录，请重新登录！");
-    location.href = "login.html";
-}
+
+    function deletePlan(btn) {
+        if(confirm("确定要删除这条计划吗？")) {
+            btn.parentElement.remove();
+            saveAllPlans();
+        }
+    }
+
+    // 核心保存函数
+    async function saveAllPlans() {
+        if (!username) return;
+        const cards = document.querySelectorAll('.study-card');
+        const plans = [];
+        
+        cards.forEach(card => {
+            const titleText = card.querySelector('h3').innerText.trim();
+            const contentText = card.querySelector('p').innerText.trim();
+            const timeText = card.querySelector('.time').innerText.trim();
+            
+            // 只有当卡片不是全空的时候才存入数组
+            if (titleText || contentText || timeText) {
+                plans.push({
+                    title: titleText,
+                    content: contentText,
+                    time: timeText
+                });
+            }
+        });
+
+        try {
+            const response = await fetch('http://localhost:8080/save_plans', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username: username, 
+                    plans: plans 
+                })
+            });
+            const result = await response.json();
+            if(result.status === "success") {
+                console.log("学习计划已自动同步到本地文件");
+            }
+        } catch (e) {
+            console.error("同步失败，请检查 C++ 服务器是否运行");
+        }
+    }
 </script>
 </body>
 </html>

@@ -148,6 +148,50 @@ svr.Get("/get_tasks", [&](const httplib::Request& req, httplib::Response& res) {
     res.set_content(jsonResult, "application/json");
 });
 
+// --- 学习规划接口 ---
+    svr.Post("/save_plans", [&](const httplib::Request& req, httplib::Response& res) {
+        cors(req, res);
+        
+        // 1. 提取用户名
+        std::regex uReg("\"username\":\"(.*?)\"");
+        std::smatch m;
+        std::string u;
+        if (std::regex_search(req.body, m, uReg)) u = m[1];
+
+        // 2. 提取 plans 数组内容 (寻找第一个 [ 和最后一个 ])
+        size_t first = req.body.find('[');
+        size_t last = req.body.rfind(']');
+        
+        if (!u.empty() && first != std::string::npos && last != std::string::npos) {
+            // 截取完整的 [ ... ] 部分
+            std::string plansData = req.body.substr(first, last - first + 1);
+            
+            std::ofstream out("study_plans_" + u + ".txt");
+            out << plansData;
+            out.close(); // 显式关闭，确保写入硬盘
+            std::cout << ">>> 用户 " << u << " 的学习计划已更新" << std::endl;
+            res.set_content("{\"status\":\"success\"}", "application/json");
+        } else {
+            res.set_content("{\"status\":\"fail\"}", "application/json");
+        }
+    });
+
+    // 4. 获取学习计划接口
+    svr.Get("/get_plans", [&](const httplib::Request& req, httplib::Response& res) {
+        cors(req, res);
+        std::string u = trim(req.get_param_value("username"));
+        std::ifstream inFile("study_plans_" + u + ".txt");
+        std::string content;
+        if (inFile) {
+            std::string line;
+            while (std::getline(inFile, line)) content += line;
+        } else {
+            content = "[]"; 
+        }
+        res.set_content(content, "application/json");
+    });
+
+
     std::cout << ">>> Server Solidified! Port 8080" << std::endl;
     svr.listen("0.0.0.0", 8080);
     return 0;

@@ -28,7 +28,15 @@
         .nav-menu a.active { background: rgba(255,255,255,0.25); }
 
         .wrap { margin-top: 120px; width: 1000px; margin-left: auto; margin-right: auto; background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        .page-title { font-size: 26px; color: #333; margin-bottom: 30px; padding-left: 10px; border-left: 5px solid #165DFF; }
+        .page-title { font-size: 26px; color: #333; margin-bottom: 20px; padding-left: 10px; border-left: 5px solid #165DFF; }
+
+        /* ✅ 仪表盘样式 */
+        .dashboard { display: flex; gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); flex: 1; text-align: center; }
+        .stat-value { font-size: 26px; font-weight: bold; color: #165DFF; margin-bottom: 5px; }
+        .stat-label { font-size: 13px; color: #86909C; }
+        .progress-container { width: 100%; height: 10px; background: #f2f3f5; border-radius: 5px; margin-top: 10px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #165DFF, #00d2ff); width: 0%; transition: width 0.5s ease; }
 
         /* 添加表单 */
         .add-task { background: #fff; padding: 25px 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 30px; }
@@ -91,6 +99,28 @@
 <div class="wrap">
     <h2 class="page-title">我的事务日程管理</h2>
 
+    <div class="dashboard">
+        <div class="stat-card">
+            <div class="stat-value" id="totalTasks">0</div>
+            <div class="stat-label">待办总数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="highPriorityCount">0</div>
+            <div class="stat-label">高优先级</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="overdueCount" style="color: #f53f3f;">0</div>
+            <div class="stat-label">已逾期</div>
+        </div>
+        <div class="stat-card" style="flex: 1.5;">
+            <div class="stat-label">任务完成进度</div>
+            <div class="progress-container">
+                <div class="progress-bar" id="completionBar"></div>
+            </div>
+            <div class="stat-label" id="completionText" style="margin-top: 5px; font-weight: bold;">0%</div>
+        </div>
+    </div>
+
     <div class="add-task">
         <h3>添加新事务</h3>
         <form class="task-form" id="taskForm">
@@ -106,31 +136,52 @@
         </form>
     </div>
 
-   <div class="task-list" id="taskList">
-       </div>
+   <div class="task-list" id="taskList"></div>
 </div>
 
 <script>
     const username = localStorage.getItem("saveUser");
+    let currentTasks = []; // 用于存储当前拉取的任务数据
 
     // 1. 页面初始化
     window.onload = async function() {
         if (!username) return;
         await refreshTaskList();
-        
-        // 开启倒计时每分钟自动刷新
         setInterval(updateAllCountdowns, 60000);
     };
+
+    // ✅ 核心：更新仪表盘数据
+    function updateDashboard() {
+        const total = currentTasks.length;
+        let highCount = 0;
+        let overdueCount = 0;
+        const now = new Date();
+
+        currentTasks.forEach(t => {
+            if (t.priority === 'high') highCount++;
+            if (new Date(t.task_time) < now) overdueCount++;
+        });
+
+        const completedCount = document.querySelectorAll('.task-card.completed').length;
+        const progress = total === 0 ? 0 : Math.round((completedCount / total) * 100);
+
+        document.getElementById('totalTasks').innerText = total;
+        document.getElementById('highPriorityCount').innerText = highCount;
+        document.getElementById('overdueCount').innerText = overdueCount;
+        document.getElementById('completionBar').style.width = progress + "%";
+        document.getElementById('completionText').innerText = progress + "%";
+    }
 
     // 2. 从服务器获取并刷新列表
     async function refreshTaskList() {
         try {
             const res = await fetch(`http://localhost:8080/get_tasks?username=${username}`);
-            const tasks = await res.json();
+            currentTasks = await res.json();
             const list = document.getElementById('taskList');
             list.innerHTML = ""; 
-            tasks.forEach(t => renderTask(t.task_name, t.task_time, t.priority));
-            updateAllCountdowns(); // 渲染后立即计算一次时间
+            currentTasks.forEach(t => renderTask(t.task_name, t.task_time, t.priority));
+            updateAllCountdowns();
+            updateDashboard(); // 刷新后更新看板
         } catch (e) {
             console.error("无法连接到后端服务器");
         }
@@ -177,7 +228,7 @@
             const data = await res.json();
             if (data.status === "success") {
                 document.getElementById('taskForm').reset();
-                refreshTaskList(); // 局部刷新
+                refreshTaskList();
             }
         } catch (e) { alert("服务器连接失败"); }
     }
@@ -215,12 +266,14 @@
                 el.classList.remove('overdue');
             }
         });
+        updateDashboard(); // 倒计时更新时顺便刷新看板（处理逾期数）
     }
 
     // 7. 视觉勾选完成
     function toggleComplete(checkbox) {
         const card = checkbox.closest('.task-card');
         checkbox.checked ? card.classList.add('completed') : card.classList.remove('completed');
+        updateDashboard(); // 勾选时更新进度条
     }
 
     function logout() {

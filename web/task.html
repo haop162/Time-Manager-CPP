@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <script>
-// 只判断会话登录，刷新就失效
-if (sessionStorage.getItem("isLogin") !== "true") {
-    alert("请先登录后再访问该页面！");
-    location.href = "new.html";
-}
-</script>
+    <script>
+    // 只判断会话登录，刷新就失效
+    if (sessionStorage.getItem("isLogin") !== "true") {
+        alert("请先登录后再访问该页面！");
+        location.href = "new.html";
+    }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>事务日程管理 - 学生事务时间管理系统</title>
@@ -19,8 +19,10 @@ if (sessionStorage.getItem("isLogin") !== "true") {
         .nav-menu a { color: #fff; text-decoration: none; font-size: 16px; margin: 0 12px; padding: 8px 10px; border-radius: 5px; transition: all 0.3s; }
         .nav-menu a:hover { background: rgba(255,255,255,0.2); }
         .nav-menu a.active { background: rgba(255,255,255,0.25); }
+        
         .wrap { margin-top: 120px; width: 1000px; margin-left: auto; margin-right: auto; background: rgba(255, 255, 255, 0.85); padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .page-title { font-size: 26px; color: #333; margin-bottom: 30px; padding-left: 10px; border-left: 5px solid #165DFF; }
+        
         .add-task { background: #fff; padding: 25px 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 30px; }
         .add-task h3 { color: #165DFF; margin-bottom: 20px; font-size: 18px; }
         .task-form { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
@@ -30,14 +32,23 @@ if (sessionStorage.getItem("isLogin") !== "true") {
         .task-form select { width: 150px; }
         .task-form button { padding: 14px 30px; background: #165DFF; color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: 0.2s; }
         .task-form button:hover { background: #0b4cde; }
+        
         .task-list { margin-top: 30px; }
         .task-card { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; transition: transform 0.2s; display: flex; justify-content: space-between; align-items: center; }
         .task-card:hover { transform: translateY(-3px); }
+        
         .task-high { border-left: 5px solid #f53f3f; background: #fff2f0; }
         .task-medium { border-left: 5px solid #ff9800; background: #fff7e6; }
         .task-low { border-left: 5px solid #34a853; background: #f6ffed; }
+        
         .task-info h4 { color: #333; margin-bottom: 5px; }
         .task-info .task-time { color: #999; font-size: 13px; }
+        
+        /* 倒计时样式 */
+        .task-countdown { font-size: 13px; color: #165DFF; margin-top: 5px; font-weight: bold; }
+        .task-countdown.overdue { color: #f53f3f; animation: blink 2s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
         .task-priority { padding: 5px 12px; border-radius: 20px; font-size: 13px; color: #fff; }
         .priority-high { background: #f53f3f; }
         .priority-medium { background: #ff9800; }
@@ -82,7 +93,7 @@ if (sessionStorage.getItem("isLogin") !== "true") {
 </div>
 
 <script>
-    // 页面加载时自动从后端拉取任务
+    // 页面加载时拉取任务并启动倒计时
     window.onload = async function() {
         const username = localStorage.getItem("saveUser");
         if (!username) return;
@@ -92,11 +103,45 @@ if (sessionStorage.getItem("isLogin") !== "true") {
             const tasks = await res.json();
             const list = document.getElementById('taskList');
             list.innerHTML = ""; 
+            
             tasks.forEach(t => renderTask(t.task_name, t.task_time, t.priority));
+
+            // 数据渲染完后，启动倒计时逻辑
+            updateAllCountdowns();
+            setInterval(updateAllCountdowns, 60000); // 每分钟刷新一次
+            
         } catch (e) { console.log("拉取数据失败，请确保 C++ 服务器已开启"); }
     };
 
-    // 核心：将任务发送到后端保存
+    // 倒计时核心计算逻辑
+    function updateAllCountdowns() {
+        const elements = document.querySelectorAll('.task-countdown');
+        const now = new Date();
+
+        elements.forEach(el => {
+            const targetStr = el.getAttribute('data-time');
+            const targetDate = new Date(targetStr);
+            const diff = targetDate - now;
+
+            if (diff <= 0) {
+                el.innerText = "⚠️ 任务已逾期";
+                el.classList.add('overdue');
+            } else {
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+                let text = "剩余：";
+                if (days > 0) text += `${days}天 `;
+                text += `${hours}时 ${mins}分`;
+                
+                el.innerText = text;
+                el.classList.remove('overdue');
+            }
+        });
+    }
+
+    // 将任务发送到后端保存
     async function addTask() {
         const tInput = document.getElementById('taskInput');
         const tmInput = document.getElementById('timeInput');
@@ -120,23 +165,25 @@ if (sessionStorage.getItem("isLogin") !== "true") {
             });
             const data = await response.json();
             if (data.status === "success") {
-                location.reload(); // 保存成功后刷新页面以加载新数据
+                location.reload(); 
             } else {
                 alert("后端保存失败");
             }
         } catch (e) { alert("连接服务器失败，请检查 C++ 后端！"); }
     }
 
-    // 渲染函数：将任务数据显示在网页上
+    // 渲染函数：增加 data-time 属性以供倒计时计算
     function renderTask(name, time, priority) {
         const list = document.getElementById('taskList');
         const card = document.createElement('div');
         const pMap = { high: '高优先级', medium: '中优先级', low: '低优先级' };
+        
         card.className = `task-card task-${priority}`;
         card.innerHTML = `
             <div class="task-info">
                 <h4>${name}</h4>
-                <div class="task-time">${time.replace('T', ' ')}</div>
+                <div class="task-time">截止：${time.replace('T', ' ')}</div>
+                <div class="task-countdown" data-time="${time}">计算中...</div>
             </div>
             <div class="task-priority priority-${priority}">${pMap[priority]}</div>
         `;
@@ -146,7 +193,7 @@ if (sessionStorage.getItem("isLogin") !== "true") {
     function logout() {
         sessionStorage.removeItem("isLogin");
         alert("已退出登录，请重新登录！");
-        location.href = "login.html";
+        location.href = "new.html";
     }
 </script>
 </body>

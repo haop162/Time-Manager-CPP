@@ -2,10 +2,10 @@
 <html lang="zh-CN">
 <head>
     <script>
-    // 只判断会话登录，刷新就失效
+    // 权限检查：只判断会话登录，刷新就失效
     if (sessionStorage.getItem("isLogin") !== "true") {
         alert("请先登录后再访问该页面！");
-        location.href = "new.html";
+        location.href = "login.html";
     }
     </script>
     <meta charset="UTF-8">
@@ -13,46 +13,64 @@
     <title>事务日程管理 - 学生事务时间管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft Yahei", sans-serif; }
-        body { background: url('images/task.jpeg') center top / cover no-repeat fixed; background-color: #f5f7fa; }
+        
+        /* 全局背景图 */
+        body { 
+            background: url('images/task.jpeg') center top / cover no-repeat fixed; 
+            background-color: #f5f7fa; 
+        }
+
+        /* 导航栏 */
         .nav-bar { width: 100%; height: 70px; background-color: #165DFF; display: flex; align-items: center; justify-content: space-between; padding: 0 60px; box-shadow: 0 2px 12px rgba(0,0,0,0.12); position: fixed; top: 0; left: 0; z-index: 999; }
         .nav-bar .logo { font-size: 22px; color: #fff; font-weight: bold; }
         .nav-menu a { color: #fff; text-decoration: none; font-size: 16px; margin: 0 12px; padding: 8px 10px; border-radius: 5px; transition: all 0.3s; }
         .nav-menu a:hover { background: rgba(255,255,255,0.2); }
         .nav-menu a.active { background: rgba(255,255,255,0.25); }
-        
-        .wrap { margin-top: 120px; width: 1000px; margin-left: auto; margin-right: auto; background: rgba(255, 255, 255, 0.85); padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+
+        .wrap { margin-top: 120px; width: 1000px; margin-left: auto; margin-right: auto; background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .page-title { font-size: 26px; color: #333; margin-bottom: 30px; padding-left: 10px; border-left: 5px solid #165DFF; }
-        
+
+        /* 添加表单 */
         .add-task { background: #fff; padding: 25px 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 30px; }
         .add-task h3 { color: #165DFF; margin-bottom: 20px; font-size: 18px; }
         .task-form { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
-        .task-form input, .task-form select { padding: 14px; border: 1px solid #e0e6ed; border-radius: 8px; font-size: 15px; outline-color: #165DFF; }
+        .task-form input, .task-form select { padding: 12px; border: 1px solid #e0e6ed; border-radius: 8px; font-size: 15px; outline-color: #165DFF; }
         .task-form input[type="text"] { flex: 1; min-width: 300px; }
-        .task-form input[type="datetime-local"] { width: 220px; }
-        .task-form select { width: 150px; }
-        .task-form button { padding: 14px 30px; background: #165DFF; color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .task-form button { padding: 12px 25px; background: #165DFF; color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: 0.2s; }
         .task-form button:hover { background: #0b4cde; }
-        
+
+        /* 任务列表卡片 */
         .task-list { margin-top: 30px; }
         .task-card { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; transition: transform 0.2s; display: flex; justify-content: space-between; align-items: center; }
         .task-card:hover { transform: translateY(-3px); }
         
-        .task-high { border-left: 5px solid #f53f3f; background: #fff2f0; }
-        .task-medium { border-left: 5px solid #ff9800; background: #fff7e6; }
-        .task-low { border-left: 5px solid #34a853; background: #f6ffed; }
-        
-        .task-info h4 { color: #333; margin-bottom: 5px; }
-        .task-info .task-time { color: #999; font-size: 13px; }
-        
-        /* 倒计时样式 */
-        .task-countdown { font-size: 13px; color: #165DFF; margin-top: 5px; font-weight: bold; }
-        .task-countdown.overdue { color: #f53f3f; animation: blink 2s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        /* 优先级边框色 */
+        .task-high { border-left: 6px solid #f53f3f; }
+        .task-medium { border-left: 6px solid #ff9800; }
+        .task-low { border-left: 6px solid #34a853; }
 
-        .task-priority { padding: 5px 12px; border-radius: 20px; font-size: 13px; color: #fff; }
+        /* 倒计时与逾期样式 */
+        .task-info h4 { color: #333; margin-bottom: 4px; transition: 0.3s; }
+        .task-time { color: #999; font-size: 13px; }
+        .task-countdown { font-size: 13px; color: #165DFF; margin-top: 6px; font-weight: bold; }
+        .task-countdown.overdue { color: #f53f3f; animation: blink 2s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* 完成状态效果 */
+        .task-card.completed { opacity: 0.6; background: #f9f9f9; border-left-color: #ccc; }
+        .task-card.completed h4 { text-decoration: line-through; color: #999; }
+
+        /* 操作区域 */
+        .task-right { display: flex; align-items: center; gap: 15px; }
+        .task-priority { padding: 4px 12px; border-radius: 20px; font-size: 12px; color: #fff; }
         .priority-high { background: #f53f3f; }
         .priority-medium { background: #ff9800; }
         .priority-low { background: #34a853; }
+
+        .btn-delete { background: #ff4d4f; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .btn-delete:hover { background: #d9363e; }
+        
+        .finish-check { width: 18px; height: 18px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -75,125 +93,140 @@
 
     <div class="add-task">
         <h3>添加新事务</h3>
-        <form class="task-form">
-            <input type="text" id="taskInput" placeholder="请输入事务内容（如：完成前端作业）" required>
+        <form class="task-form" id="taskForm">
+            <input type="text" id="taskInput" placeholder="请输入事务内容（如：准备英语演讲）" required>
             <input type="datetime-local" id="timeInput" required>
             <select id="prioritySelect" required>
-                <option value="">选择优先级</option>
+                <option value="">优先级</option>
                 <option value="high">高优先级</option>
                 <option value="medium">中优先级</option>
                 <option value="low">低优先级</option>
             </select>
-            <button type="button" onclick="addTask()">添加事务</button>
+            <button type="button" onclick="addTask()">确认添加</button>
         </form>
     </div>
 
    <div class="task-list" id="taskList">
-   </div>
+       </div>
 </div>
 
 <script>
-    // 页面加载时拉取任务并启动倒计时
-    window.onload = async function() {
-        const username = localStorage.getItem("saveUser");
-        if (!username) return;
+    const username = localStorage.getItem("saveUser");
 
+    // 1. 页面初始化
+    window.onload = async function() {
+        if (!username) return;
+        await refreshTaskList();
+        
+        // 开启倒计时每分钟自动刷新
+        setInterval(updateAllCountdowns, 60000);
+    };
+
+    // 2. 从服务器获取并刷新列表
+    async function refreshTaskList() {
         try {
             const res = await fetch(`http://localhost:8080/get_tasks?username=${username}`);
             const tasks = await res.json();
             const list = document.getElementById('taskList');
             list.innerHTML = ""; 
-            
             tasks.forEach(t => renderTask(t.task_name, t.task_time, t.priority));
+            updateAllCountdowns(); // 渲染后立即计算一次时间
+        } catch (e) {
+            console.error("无法连接到后端服务器");
+        }
+    }
 
-            // 数据渲染完后，启动倒计时逻辑
-            updateAllCountdowns();
-            setInterval(updateAllCountdowns, 60000); // 每分钟刷新一次
-            
-        } catch (e) { console.log("拉取数据失败，请确保 C++ 服务器已开启"); }
-    };
+    // 3. 渲染单条任务卡片
+    function renderTask(name, time, priority) {
+        const list = document.getElementById('taskList');
+        const card = document.createElement('div');
+        const pMap = { high: '高', medium: '中', low: '低' };
+        
+        card.className = `task-card task-${priority}`;
+        card.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <input type="checkbox" class="finish-check" onclick="toggleComplete(this)">
+                <div class="task-info">
+                    <h4>${name}</h4>
+                    <div class="task-time">截止日期：${time.replace('T', ' ')}</div>
+                    <div class="task-countdown" data-time="${time}">计算中...</div>
+                </div>
+            </div>
+            <div class="task-right">
+                <div class="task-priority priority-${priority}">${pMap[priority]}优先级</div>
+                <button class="btn-delete" onclick="deleteTask('${name}', '${time}')">删除</button>
+            </div>
+        `;
+        list.appendChild(card);
+    }
 
-    // 倒计时核心计算逻辑
+    // 4. 添加任务
+    async function addTask() {
+        const name = document.getElementById('taskInput').value;
+        const time = document.getElementById('timeInput').value;
+        const priority = document.getElementById('prioritySelect').value;
+
+        if (!name || !time || !priority) { alert('请填写完整信息'); return; }
+
+        try {
+            const res = await fetch('http://localhost:8080/add_task', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, task_name: name, task_time: time, priority })
+            });
+            const data = await res.json();
+            if (data.status === "success") {
+                document.getElementById('taskForm').reset();
+                refreshTaskList(); // 局部刷新
+            }
+        } catch (e) { alert("服务器连接失败"); }
+    }
+
+    // 5. 删除任务
+    async function deleteTask(name, time) {
+        if (!confirm("确定要删除这项事务吗？")) return;
+
+        try {
+            const res = await fetch('http://localhost:8080/delete_task', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, task_name: name, task_time: time })
+            });
+            const data = await res.json();
+            if (data.status === "success") refreshTaskList();
+        } catch (e) { alert("删除失败，请检查网络"); }
+    }
+
+    // 6. 核心倒计时逻辑
     function updateAllCountdowns() {
-        const elements = document.querySelectorAll('.task-countdown');
         const now = new Date();
-
-        elements.forEach(el => {
-            const targetStr = el.getAttribute('data-time');
-            const targetDate = new Date(targetStr);
-            const diff = targetDate - now;
+        document.querySelectorAll('.task-countdown').forEach(el => {
+            const target = new Date(el.getAttribute('data-time'));
+            const diff = target - now;
 
             if (diff <= 0) {
-                el.innerText = "⚠️ 任务已逾期";
+                el.innerText = "⚠️ 事务已逾期";
                 el.classList.add('overdue');
             } else {
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-                let text = "剩余：";
-                if (days > 0) text += `${days}天 `;
-                text += `${hours}时 ${mins}分`;
-                
-                el.innerText = text;
+                const d = Math.floor(diff / 86400000);
+                const h = Math.floor((diff % 86400000) / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                el.innerText = `剩余：${d > 0 ? d + '天 ' : ''}${h}小时 ${m}分`;
                 el.classList.remove('overdue');
             }
         });
     }
 
-    // 将任务发送到后端保存
-    async function addTask() {
-        const tInput = document.getElementById('taskInput');
-        const tmInput = document.getElementById('timeInput');
-        const pSelect = document.getElementById('prioritySelect');
-        const username = localStorage.getItem("saveUser");
-
-        if (!tInput.value || !tmInput.value || !pSelect.value) {
-            alert('请填写完整！'); return;
-        }
-
-        try {
-            const response = await fetch('http://localhost:8080/add_task', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: username,
-                    task_name: tInput.value,
-                    task_time: tmInput.value,
-                    priority: pSelect.value
-                })
-            });
-            const data = await response.json();
-            if (data.status === "success") {
-                location.reload(); 
-            } else {
-                alert("后端保存失败");
-            }
-        } catch (e) { alert("连接服务器失败，请检查 C++ 后端！"); }
-    }
-
-    // 渲染函数：增加 data-time 属性以供倒计时计算
-    function renderTask(name, time, priority) {
-        const list = document.getElementById('taskList');
-        const card = document.createElement('div');
-        const pMap = { high: '高优先级', medium: '中优先级', low: '低优先级' };
-        
-        card.className = `task-card task-${priority}`;
-        card.innerHTML = `
-            <div class="task-info">
-                <h4>${name}</h4>
-                <div class="task-time">截止：${time.replace('T', ' ')}</div>
-                <div class="task-countdown" data-time="${time}">计算中...</div>
-            </div>
-            <div class="task-priority priority-${priority}">${pMap[priority]}</div>
-        `;
-        list.appendChild(card);
+    // 7. 视觉勾选完成
+    function toggleComplete(checkbox) {
+        const card = checkbox.closest('.task-card');
+        checkbox.checked ? card.classList.add('completed') : card.classList.remove('completed');
     }
 
     function logout() {
         sessionStorage.removeItem("isLogin");
-        alert("已退出登录，请重新登录！");
-        location.href = "new.html";
+        alert("已退出登录");
+        location.href = "login.html";
     }
 </script>
 </body>

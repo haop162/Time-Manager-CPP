@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <regex>
+#include <vector>
 
 // 辅助函数：去掉字符串前后的空格
 std::string trim(const std::string& s) {
@@ -12,6 +13,7 @@ std::string trim(const std::string& s) {
     return s.substr(first, (last - first + 1));
 }
 
+// 用户处理辅助函数：mode 0 为查重，mode 1 为登录验证
 std::string handleUser(std::string targetId, std::string targetPwd = "", int mode = 0) {
     std::ifstream inFile("users.txt");
     if (!inFile) return "";
@@ -20,7 +22,7 @@ std::string handleUser(std::string targetId, std::string targetPwd = "", int mod
     targetPwd = trim(targetPwd);
 
     while (std::getline(inFile, line)) {
-        // 兼容性查重：只要包含这个学号且它是独立的列
+        if (trim(line).empty()) continue;
         size_t pos1 = line.find(" | ");
         size_t pos2 = line.rfind(" | ");
         if (pos1 != std::string::npos && pos2 != std::string::npos && pos1 != pos2) {
@@ -37,16 +39,23 @@ std::string handleUser(std::string targetId, std::string targetPwd = "", int mod
 
 int main() {
     httplib::Server svr;
-    auto cors = [](const auto&, auto& res) {
+
+    // 通用跨域处理
+    auto cors = [](const httplib::Request&, httplib::Response& res) {
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
         res.set_header("Access-Control-Allow-Headers", "Content-Type");
     };
+
+    // 监听 OPTIONS 请求以处理浏览器预检
     svr.Options(R"(.*)", cors);
+
+    // ==========================================
+    // 1. 用户模块 (注册与登录)
+    // ==========================================
 
     svr.Post("/register", [&](const httplib::Request& req, httplib::Response& res) {
         cors(req, res);
-        // 分别搜索，全部用 m[1] 保证准确
         std::regex uReg("\"username\":\"(.*?)\""), pReg("\"password\":\"(.*?)\""), nReg("\"realname\":\"(.*?)\"");
         std::smatch m;
         std::string u, p, n;
@@ -81,102 +90,104 @@ int main() {
         }
     });
 
- // 1. 添加任务接口 - 加固版
-svr.Post("/add_task", [&](const httplib::Request& req, httplib::Response& res) {
-    cors(req, res);
-    std::cout << ">>> 正在处理添加请求: " << req.body << std::endl;
+    // ==========================================
+    // 2. 事务日程管理 (任务存储)
+    // ==========================================
 
-    // 分别提取，全部用 m[1]
-    std::regex uReg("\"username\":\"(.*?)\""), tReg("\"task_name\":\"(.*?)\""), 
-               dReg("\"task_time\":\"(.*?)\""), pReg("\"priority\":\"(.*?)\"");
-    std::smatch m;
-    std::string u, task, time, prio;
-    
-    if (std::regex_search(req.body, m, uReg)) u = m[1];
-    if (std::regex_search(req.body, m, tReg)) task = m[1];
-    if (std::regex_search(req.body, m, dReg)) time = m[1];
-    if (std::regex_search(req.body, m, pReg)) prio = m[1];
+    svr.Post("/add_task", [&](const httplib::Request& req, httplib::Response& res) {
+        cors(req, res);
+        std::cout << ">>> 收到任务添加请求: " << req.body << std::endl;
 
-    if (u.empty() || task.empty()) {
-        std::cout << "!!! 错误：解析到的学号或任务名为空" << std::endl;
-        res.set_content("{\"status\":\"fail\"}", "application/json");
-        return;
-    }
-
-    std::ofstream out("tasks.txt", std::ios::app);
-    if (out.is_open()) {
-        // 强制格式：学号 | 任务名 | 时间 | 优先级
-        out << trim(u) << " | " << trim(task) << " | " << trim(time) << " | " << trim(prio) << std::endl;
-        out.close();
-        std::cout << ">>> 成功写入 tasks.txt" << std::endl;
-        res.set_content("{\"status\":\"success\"}", "application/json");
-    } else {
-        std::cout << "!!! 错误：无法打开 tasks.txt 文件" << std::endl;
-        res.set_content("{\"status\":\"fail\"}", "application/json");
-    }
-});
-
-// 2. 获取任务接口 - 稳定版
-svr.Get("/get_tasks", [&](const httplib::Request& req, httplib::Response& res) {
-    cors(req, res);
-    std::string targetUser = trim(req.get_param_value("username"));
-    std::string jsonResult = "[";
-    
-    std::ifstream inFile("tasks.txt");
-    std::string line;
-    bool first = true;
-    while (std::getline(inFile, line)) {
-        if (trim(line).empty()) continue;
+        std::regex uReg("\"username\":\"(.*?)\""), tReg("\"task_name\":\"(.*?)\""), 
+                   dReg("\"task_time\":\"(.*?)\""), pReg("\"priority\":\"(.*?)\"");
+        std::smatch m;
+        std::string u, task, time, prio;
         
-        // 使用更稳健的切割方式
-        size_t p1 = line.find(" | ");
-        size_t p2 = line.find(" | ", p1 + 3);
-        size_t p3 = line.find(" | ", p2 + 3);
+        if (std::regex_search(req.body, m, uReg)) u = m[1];
+        if (std::regex_search(req.body, m, tReg)) task = m[1];
+        if (std::regex_search(req.body, m, dReg)) time = m[1];
+        if (std::regex_search(req.body, m, pReg)) prio = m[1];
 
-        if (p1 != std::string::npos && p2 != std::string::npos && p3 != std::string::npos) {
-            std::string u = trim(line.substr(0, p1));
-            if (u == targetUser) {
-                if (!first) jsonResult += ",";
-                jsonResult += "{\"task_name\":\"" + trim(line.substr(p1 + 3, p2 - p1 - 3)) + 
-                              "\",\"task_time\":\"" + trim(line.substr(p2 + 3, p3 - p2 - 3)) + 
-                              "\",\"priority\":\"" + trim(line.substr(p3 + 3)) + "\"}";
-                first = false;
+        if (u.empty() || task.empty()) {
+            res.set_content("{\"status\":\"fail\"}", "application/json");
+            return;
+        }
+
+        std::ofstream out("tasks.txt", std::ios::app);
+        if (out.is_open()) {
+            out << trim(u) << " | " << trim(task) << " | " << trim(time) << " | " << trim(prio) << std::endl;
+            out.close();
+            std::cout << ">>> 成功写入任务至 tasks.txt" << std::endl;
+            res.set_content("{\"status\":\"success\"}", "application/json");
+        } else {
+            res.set_content("{\"status\":\"fail\",\"msg\":\"无法打开文件\"}", "application/json");
+        }
+    });
+
+    svr.Get("/get_tasks", [&](const httplib::Request& req, httplib::Response& res) {
+        cors(req, res);
+        std::string targetUser = trim(req.get_param_value("username"));
+        std::string jsonResult = "[";
+        
+        std::ifstream inFile("tasks.txt");
+        std::string line;
+        bool first = true;
+        while (std::getline(inFile, line)) {
+            if (trim(line).empty()) continue;
+            
+            size_t p1 = line.find(" | ");
+            size_t p2 = line.find(" | ", p1 + 3);
+            size_t p3 = line.find(" | ", p2 + 3);
+
+            if (p1 != std::string::npos && p2 != std::string::npos && p3 != std::string::npos) {
+                std::string u = trim(line.substr(0, p1));
+                if (u == targetUser) {
+                    if (!first) jsonResult += ",";
+                    jsonResult += "{\"task_name\":\"" + trim(line.substr(p1 + 3, p2 - p1 - 3)) + 
+                                  "\",\"task_time\":\"" + trim(line.substr(p2 + 3, p3 - p2 - 3)) + 
+                                  "\",\"priority\":\"" + trim(line.substr(p3 + 3)) + "\"}";
+                    first = false;
+                }
             }
         }
-    }
-    jsonResult += "]";
-    res.set_content(jsonResult, "application/json");
-});
+        jsonResult += "]";
+        res.set_content(jsonResult, "application/json");
+    });
 
-// --- 学习规划接口 ---
+    // ==========================================
+    // 3. 学习规划管理 (JSON 全量同步)
+    // ==========================================
+
     svr.Post("/save_plans", [&](const httplib::Request& req, httplib::Response& res) {
         cors(req, res);
         
-        // 1. 提取用户名
         std::regex uReg("\"username\":\"(.*?)\"");
         std::smatch m;
         std::string u;
         if (std::regex_search(req.body, m, uReg)) u = m[1];
 
-        // 2. 提取 plans 数组内容 (寻找第一个 [ 和最后一个 ])
+        // 提取 JSON 数组逻辑：寻找第一个 [ 和最后一个 ] 之间的内容
         size_t first = req.body.find('[');
         size_t last = req.body.rfind(']');
         
         if (!u.empty() && first != std::string::npos && last != std::string::npos) {
-            // 截取完整的 [ ... ] 部分
             std::string plansData = req.body.substr(first, last - first + 1);
             
+            // 为每个用户创建独立存储
             std::ofstream out("study_plans_" + u + ".txt");
-            out << plansData;
-            out.close(); // 显式关闭，确保写入硬盘
-            std::cout << ">>> 用户 " << u << " 的学习计划已更新" << std::endl;
-            res.set_content("{\"status\":\"success\"}", "application/json");
+            if (out.is_open()) {
+                out << plansData;
+                out.close();
+                std::cout << ">>> 用户 " << u << " 的学习计划已同步" << std::endl;
+                res.set_content("{\"status\":\"success\"}", "application/json");
+            } else {
+                res.set_content("{\"status\":\"fail\"}", "application/json");
+            }
         } else {
-            res.set_content("{\"status\":\"fail\"}", "application/json");
+            res.set_content("{\"status\":\"fail\",\"msg\":\"解析异常\"}", "application/json");
         }
     });
 
-    // 4. 获取学习计划接口
     svr.Get("/get_plans", [&](const httplib::Request& req, httplib::Response& res) {
         cors(req, res);
         std::string u = trim(req.get_param_value("username"));
@@ -191,8 +202,58 @@ svr.Get("/get_tasks", [&](const httplib::Request& req, httplib::Response& res) {
         res.set_content(content, "application/json");
     });
 
+    // ---------------------------------------------------------
+// 5. 删除任务接口 (添加在 get_tasks 之后)
+// ---------------------------------------------------------
+svr.Post("/delete_task", [&](const httplib::Request& req, httplib::Response& res) {
+    cors(req, res);
+    
+    // 解析要删除的任务信息
+    std::regex uReg("\"username\":\"(.*?)\""), nReg("\"task_name\":\"(.*?)\""), tReg("\"task_time\":\"(.*?)\"");
+    std::smatch m;
+    std::string u, taskName, taskTime;
+    
+    if (std::regex_search(req.body, m, uReg)) u = m[1];
+    if (std::regex_search(req.body, m, nReg)) taskName = m[1];
+    if (std::regex_search(req.body, m, tReg)) taskTime = m[1];
 
-    std::cout << ">>> Server Solidified! Port 8080" << std::endl;
+    if (u.empty() || taskName.empty()) {
+        res.set_content("{\"status\":\"fail\"}", "application/json");
+        return;
+    }
+
+    // 读取文件并过滤掉要删除的那一行
+    std::ifstream inFile("tasks.txt");
+    std::string line, newContent = "";
+    bool found = false;
+
+    while (std::getline(inFile, line)) {
+        if (trim(line).empty()) continue;
+        // 只有不匹配当前删除条件的行才保留
+        // 匹配规则：学号 | 任务名 | 时间
+        if (line.find(u) != std::string::npos && 
+            line.find(taskName) != std::string::npos && 
+            line.find(taskTime) != std::string::npos) {
+            found = true;
+            continue; // 跳过这一行，实现删除
+        }
+        newContent += line + "\n";
+    }
+    inFile.close();
+
+    // 将新内容写回文件
+    std::ofstream out("tasks.txt");
+    out << newContent;
+    out.close();
+
+    if (found) {
+        res.set_content("{\"status\":\"success\"}", "application/json");
+    } else {
+        res.set_content("{\"status\":\"fail\",\"msg\":\"未找到该任务\"}", "application/json");
+    }
+});
+
+
     svr.listen("0.0.0.0", 8080);
     return 0;
 }
